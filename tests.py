@@ -43,7 +43,7 @@ class CupcakeViewsTestCase(TestCase):
             db.session.add(cupcake)
             db.session.commit()
 
-            self.cupcake = cupcake
+            self.cupcake_id = cupcake.id
 
     def tearDown(self):
         """Clean up fouled transactions."""
@@ -60,7 +60,7 @@ class CupcakeViewsTestCase(TestCase):
             self.assertEqual(data, {
                 "cupcakes": [
                     {
-                        "id": self.cupcake.id,
+                        "id": self.cupcake_id,
                         "flavor": "TestFlavor",
                         "size": "TestSize",
                         "rating": 5,
@@ -71,20 +71,27 @@ class CupcakeViewsTestCase(TestCase):
 
     def test_get_cupcake(self):
         with app.test_client() as client:
-            url = f"/api/cupcakes/{self.cupcake.id}"
+            url = f"/api/cupcakes/{self.cupcake_id}"
             resp = client.get(url)
 
             self.assertEqual(resp.status_code, 200)
             data = resp.json
             self.assertEqual(data, {
                 "cupcake": {
-                    "id": self.cupcake.id,
+                    "id": self.cupcake_id,
                     "flavor": "TestFlavor",
                     "size": "TestSize",
                     "rating": 5,
                     "image": "http://test.com/cupcake.jpg"
                 }
             })
+
+    def test_get_cupcake_404(self):
+        with app.test_client() as client:
+            url = f"/api/cupcakes/1000"
+            resp = client.get(url)
+
+            self.assertEqual(resp.status_code, 404)
 
     def test_create_cupcake(self):
         with app.test_client() as client:
@@ -112,25 +119,26 @@ class CupcakeViewsTestCase(TestCase):
 
     def test_update_cupcake(self):
         with app.test_client() as client:
-            resp = client.patch('/api/cupcake/2', {"rating": 1})
+            resp = client.patch(f'/api/cupcake/{self.cupcake_id}', json={"rating": 1})
 
             self.assertEqual(resp.status_code, 200)
 
             data = resp.json
-            self.assertIsInstance(data['cupcake']['id'], int)
-            del data['cupcake']['id']
+            # self.assertIsInstance(data['cupcake']['id'], int)
+            # del data['cupcake']['id']
             self.assertEqual(data, {
                 "cupcake": {
-                    "flavor": "TestFlavor2",
-                    "size": "TestSize2",
+                    "id": self.cupcake_id,
+                    "flavor": "TestFlavor",
+                    "size": "TestSize",
                     "rating": 1,
-                    "image": "http://test.com/cupcake2.jpg"
+                    "image": "http://test.com/cupcake.jpg"
                 }
             })
 
     def test_delete_cupcake(self):
         with app.test_client() as client:
-            resp = client.delete('/api/cupcake/2')
+            resp = client.delete(f'/api/cupcake/{self.cupcake_id}')
 
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp.json, {'message': 'deleted'})

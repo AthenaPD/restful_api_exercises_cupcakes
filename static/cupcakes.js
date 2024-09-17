@@ -37,6 +37,14 @@ class CupcakeList {
 
         return new CupcakeList(cupcakes);
     }
+
+    static async fetchCupcakesByFlavor(flavor) {
+        const response = await axios.get(`${BASE_URL}cupcakes/search/${flavor}`);
+
+        const cupcakes = response.data.cupcakes.map(cupcake => new Cupcake(cupcake));
+
+        return new CupcakeList(cupcakes);
+    }
 }
 
 function generateCupcakeMarkup(cupcake) {
@@ -83,3 +91,15 @@ async function handleAddCupcake(evt) {
     $(start);
 }
 $("#add-cupcake").on("submit", handleAddCupcake);
+
+async function filterByFlavor(evt) {
+    evt.preventDefault();
+
+    const flavor = $("#search-flavor").val();
+    cupcakes = await CupcakeList.fetchCupcakesByFlavor(flavor);
+
+    evt.target.reset();
+
+    showCupcakes(cupcakes.cupcakes);
+}
+$("#search").on("submit", filterByFlavor);

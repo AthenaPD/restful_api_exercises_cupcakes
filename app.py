@@ -31,6 +31,15 @@ def list_all_cupcakes():
 
     return jsonify(cupcakes=serialized)
 
+@app.route('/api/cupcakes/search/<flavor>')
+def list_cupcake_by_flavor(flavor):
+    """Get cupcake filtered by flavor."""
+    cupcakes = Cupcake.query.filter(Cupcake.flavor.ilike(f'%{flavor}%')).all()
+
+    serialized = [cupcake.serialize() for cupcake in cupcakes]
+
+    return jsonify(cupcakes=serialized)
+
 @app.route('/api/cupcakes/<int:cupcake_id>')
 def list_single_cupcake(cupcake_id):
     """Return JSON {'cupcake': {id, flavor, size, rating, image}}"""
